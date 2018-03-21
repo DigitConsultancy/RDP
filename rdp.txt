@@ -893,3 +893,2764 @@ class Validator {
 	}
 
 }
+
+*************************************************************EOF************************************************************************
+
+
+
+/**************************************************************************************************/
+/* 
+ *  
+ * DO NOT ADD PACKAGE DECLARATION
+ * PLEASE NOTE: THIS SKELETON FILE MUST BE PLACED UNDER DEFAULT PACKAGE OF SRC FOLDER
+ * 
+ * ALL THE CODING MUST BE DONE INSIDE THIS SINGLE .JAVA FILE ONLY
+ * DO NOT CREATE DEPENDENT CLASSES
+ * DO NOT MODIFY CODE SKELETON 
+ * DO NOT MODIFY: 
+ * 		ACCESS SPECIFIERS, RETURN TYPES OR DATA TYPES, EXCEPTION CLAUSES, 
+ * 	    CLASS OR METHOD NAMES IN THE SKELETON
+ *  
+ *  
+ *  YOU MUST CODE ON THE SAME PROJECT MAPPED IN EBOX VIEW THROUGHOUT THE ASSESSMENT
+ *  CLICK ON 'Problem/Project Status' BUTTON TO SEE THE PROJECT MAPPED IN EBOX
+ *  
+ *  YOU MUST CLICK ON 'SAVE PROJECT' BUTTON EVERY 10 MINUTES TO PERIODICALLY SAVE 
+ *  CTRL + S ALONE, WILL NOT BE SUFFICIENT TO SAVE YOUR CODE IN EBOX
+ *  CLICKING ON 'SAVE PROJECT' ENSURES NO LOSS OF CODE 
+ * 
+ *  REACH OUT TO PROCTORS FOR ANY QUERIES
+ *  
+ * Skeleton Version 2.0
+ * Date Modified: 21-June-2016 
+ */
+/*************************************************************************************************/
+
+// imports here
+
+import java.io.BufferedReader;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
+import java.util.regex.Pattern;
+
+/**
+ * This class must be used to write the solution for the given requirement. No
+ * additional classes must be created
+ * 
+ */
+public class BusRouteManager {
+	
+	static final String FILE_PATH = "D:\\input.txt";
+	int dayOfTravel;
+
+	public static void main(String args[])throws FileNotFoundException, BusRouteManagerException{
+		BusRouteManager busRouteManager = new BusRouteManager();
+		List<BusDetailsVO> busDetailsList = busRouteManager.getBusDetailsForTravel(FILE_PATH, 2, 51, "32-12-2012");
+		
+		for(int i=0;i<busDetailsList.size();i++){
+		    System.out.println(busDetailsList.get(i));
+		} 
+		
+		System.out.println(busRouteManager.getBusSchedule(FILE_PATH));
+	}
+	/**
+	 * Do not change the method signature
+	 * 
+	 * @param filePath
+	 * @param source
+	 * @param destination
+	 * @param dateOfTravel
+	 * @return List<BusDetailsVO>
+	 * @throws BusRouteManagerException
+	 */
+	public List<BusDetailsVO> getBusDetailsForTravel(final String filePath,
+			final int source, final int destination, final String dateOfTravel)
+			throws BusRouteManagerException {
+
+		List<BusDetailsVO> listVo = new ArrayList<BusDetailsVO>();
+
+		try {
+			BufferedReader br = new BufferedReader(new FileReader(filePath));
+			String info;
+			List<String> lStr;
+			
+			if(validateInputParameters(source, destination, dateOfTravel)){
+			
+				try {
+					while((info = br.readLine()) != null){
+						
+						lStr = new ArrayList<String>();
+						lStr = Arrays.asList(info.split("[|]"));
+						int busSource = Integer.parseInt(lStr.get(2));
+						int busDest = Integer.parseInt(lStr.get(3));
+						String dayInfo = lStr.get(4);
+						float baseFare = Float.parseFloat(lStr.get(5));
+						float additionalFare = Float.parseFloat(lStr.get(6));
+						float totalFare = baseFare + (destination - source) * additionalFare;
+						
+						if (validateInputFile(lStr) && (source >= busSource) && (destination <= busDest) && (dayInfo.charAt(dayOfTravel)=='1')){
+							BusDetailsVO busDetails = new BusDetailsVO();
+							
+							busDetails.setBusNumber(lStr.get(0));
+							busDetails.setBusRouteNumber(lStr.get(1));
+							busDetails.setSource(busSource);
+							busDetails.setDestination(busDest);
+							busDetails.setDayInfo(dayInfo);
+							busDetails.setBaseFare(baseFare);
+							busDetails.setAdditionalFare(additionalFare);
+							busDetails.setTotalFare(totalFare);
+							
+							listVo.add(busDetails);
+						}
+					}
+				} catch (IOException e) {
+					e.printStackTrace();
+				}catch (ParseException e) {
+					throw new BusRouteManagerException("Invalid Data Format");
+				}
+			}
+
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+		return listVo; 
+	}
+	
+	/*This method is used for validating the input parameters*/
+	public boolean validateInputParameters(final int source, final int destination, final String dateOfTravel)throws BusRouteManagerException{
+		if(!((source >= 1) && (destination <= 50) && (source <= destination))){
+			return false;
+		}
+		
+	    SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy");
+	    dateFormat.setLenient(false);
+	    try {
+	      Date inputDateOfTravel = dateFormat.parse(dateOfTravel);
+	      Calendar c = Calendar.getInstance();
+	      c.setTime(inputDateOfTravel);
+	      //dayOfTravel=3;
+	      dayOfTravel = c.get(Calendar.DAY_OF_WEEK)-1;
+	      return true;
+	    } catch (ParseException pe) {
+	    	throw new BusRouteManagerException("Invalid date format for dateOfTravel. Please provide dateOfTravel in dd-mm-yyyy format.");
+	    }
+	}
+	
+	//This method is used for validating the input file
+	public boolean validateInputFile(List<String> inputFileDetail) throws ParseException, BusRouteManagerException{
+		boolean validation = true;
+		int source = Integer.parseInt(inputFileDetail.get(2));
+		int dest = Integer.parseInt(inputFileDetail.get(3));
+		
+		try {
+			if(inputFileDetail.get(1).equals("R1")){
+				if(!((source>=1) && (dest<=17) && (source <= dest))){
+					validation = false;
+			    	throw new BusRouteManagerException("Input file contains invalid data.Source and Destination does not match for the given route.");
+				}
+			}
+
+			if(inputFileDetail.get(1).equals("R2")){
+				if(!((source>=18) && (dest<=34) && (source <= dest))){
+					validation = false;
+			    	throw new BusRouteManagerException("Input file contains invalid data.Source and Destination does not match for the given route.");
+				}
+			}
+
+			if(inputFileDetail.get(1).equals("R3")){
+				if(!((source>=35) && (dest<=50) && (source <= dest))){
+					validation = false;
+			    	throw new BusRouteManagerException("Input file contains invalid data.Source and Destination does not match for the given route.");
+				}
+			}
+		} catch (BusRouteManagerException e) {
+				throw e;
+		}
+
+		if(!(Pattern.matches("[0-1]{7}", inputFileDetail.get(4)))){
+			validation = false;
+		}
+		return validation;
+		
+	}
+
+	/**
+	 * @param filePath
+	 * @return Map<Integer, Set>
+	 * @throws BusRouteManagerException
+	 */
+	public Map<Integer, Set> getBusSchedule(final String filePath)
+			throws BusRouteManagerException {
+		
+		Map<Integer, Set> busMap = new HashMap<Integer, Set>();
+		Set<String> busSetSat = new TreeSet<String>();
+		Set<String> busSetSun = new TreeSet<String>();
+
+		try {
+			BufferedReader br = new BufferedReader(new FileReader(filePath));
+			String info;
+			List<String> inputList;
+			
+			while((info = br.readLine()) != null){
+				inputList = new ArrayList<String>();
+				inputList = Arrays.asList(info.split("[|]"));
+				String dayInfo = inputList.get(4);
+				
+				if (validateInputFile(inputList)){
+					if((dayInfo.charAt(0)=='1')){
+						busSetSun.add(inputList.get(0));
+					}
+					if((dayInfo.charAt(6)=='1')){
+						busSetSat.add(inputList.get(0));
+					}
+				}
+			}
+			busMap.put(1, busSetSat);
+			busMap.put(2, busSetSun);
+
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		}catch (IOException e) {
+			e.printStackTrace();
+		}catch (ParseException e) {
+			throw new BusRouteManagerException("Invalid Data Format");
+		}
+		return busMap;
+	}
+}
+
+/**
+ * VO class supplied part of the Skeleton. Do not modify this class
+ * 
+ */
+class BusDetailsVO {
+	private String busNumber;
+	private String busRouteNumber;
+	private int source;
+	private int destination;
+	private String dayInfo;
+	private float baseFare;
+	private float additionalFare;
+	private float totalFare;
+
+	/**
+	 * @return the busNumber
+	 */
+	public String getBusNumber() {
+		return busNumber;
+	}
+
+	/**
+	 * @param busNumber
+	 *            the busNumber to set
+	 */
+	public void setBusNumber(String busNumber) {
+		this.busNumber = busNumber;
+	}
+
+	/**
+	 * @return the busRouteNumber
+	 */
+	public String getBusRouteNumber() {
+		return busRouteNumber;
+	}
+
+	/**
+	 * @param busRouteNumber
+	 *            the busRouteNumber to set
+	 */
+	public void setBusRouteNumber(String busRouteNumber) {
+		this.busRouteNumber = busRouteNumber;
+	}
+
+	/**
+	 * @return the source
+	 */
+	public int getSource() {
+		return source;
+	}
+
+	/**
+	 * @param source
+	 *            the source to set
+	 */
+	public void setSource(int source) {
+		this.source = source;
+	}
+
+	/**
+	 * @return the destination
+	 */
+	public int getDestination() {
+		return destination;
+	}
+
+	/**
+	 * @param destination
+	 *            the destination to set
+	 */
+	public void setDestination(int destination) {
+		this.destination = destination;
+	}
+
+	/**
+	 * @return the dayInfo
+	 */
+	public String getDayInfo() {
+		return dayInfo;
+	}
+
+	/**
+	 * @param dayInfo
+	 *            the dayInfo to set
+	 */
+	public void setDayInfo(String dayInfo) {
+		this.dayInfo = dayInfo;
+	}
+
+	/**
+	 * @return the baseFare
+	 */
+	public float getBaseFare() {
+		return baseFare;
+	}
+
+	/**
+	 * @param baseFare
+	 *            the baseFare to set
+	 */
+	public void setBaseFare(float baseFare) {
+		this.baseFare = baseFare;
+	}
+
+	/**
+	 * @return the additionalFare
+	 */
+	public float getAdditionalFare() {
+		return additionalFare;
+	}
+
+	/**
+	 * @param additionalFare
+	 *            the additionalFare to set
+	 */
+	public void setAdditionalFare(float additionalFare) {
+		this.additionalFare = additionalFare;
+	}
+
+	/**
+	 * @return the totalFare
+	 */
+	public float getTotalFare() {
+		return totalFare;
+	}
+
+	/**
+	 * @param totalFare
+	 *            the totalFare to set
+	 */
+	public void setTotalFare(float totalFare) {
+		this.totalFare = totalFare;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see java.lang.Object#toString()
+	 */
+	@Override
+	public String toString() {
+		StringBuilder builder = new StringBuilder();
+		builder.append("BusDetailsVO [busNumber=");
+		builder.append(busNumber);
+		builder.append(", busRouteNumber=");
+		builder.append(busRouteNumber);
+		builder.append(", source=");
+		builder.append(source);
+		builder.append(", destination=");
+		builder.append(destination);
+		builder.append(", dayInfo=");
+		builder.append(dayInfo);
+		builder.append(", baseFare=");
+		builder.append(baseFare);
+		builder.append(", additionalFare=");
+		builder.append(additionalFare);
+		builder.append(", totalFare=");
+		builder.append(totalFare);
+		builder.append("]");
+		return builder.toString();
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see java.lang.Object#hashCode()
+	 */
+	@Override
+	public int hashCode() {
+		int prime = 31;
+		int result = 1;
+		result = prime * result + Float.floatToIntBits(additionalFare);
+		result = prime * result + Float.floatToIntBits(baseFare);
+		result = prime * result
+				+ ((busNumber == null) ? 0 : busNumber.hashCode());
+		result = prime * result
+				+ ((busRouteNumber == null) ? 0 : busRouteNumber.hashCode());
+		result = prime * result + ((dayInfo == null) ? 0 : dayInfo.hashCode());
+		result = prime * result + destination;
+		result = prime * result + source;
+		result = prime * result + Float.floatToIntBits(totalFare);
+		return result;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see java.lang.Object#equals(java.lang.Object)
+	 */
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj) {
+			return true;
+		}
+		if (obj == null) {
+			return false;
+		}
+		if (getClass() != obj.getClass()) {
+			return false;
+		}
+		BusDetailsVO other = (BusDetailsVO) obj;
+		if (Float.floatToIntBits(additionalFare) != Float
+				.floatToIntBits(other.additionalFare)) {
+			return false;
+		}
+		if (Float.floatToIntBits(baseFare) != Float
+				.floatToIntBits(other.baseFare)) {
+			return false;
+		}
+		if (busNumber == null) {
+			if (other.busNumber != null) {
+				return false;
+			}
+		} else if (!busNumber.equals(other.busNumber)) {
+			return false;
+		}
+		if (busRouteNumber == null) {
+			if (other.busRouteNumber != null) {
+				return false;
+			}
+		} else if (!busRouteNumber.equals(other.busRouteNumber)) {
+			return false;
+		}
+		if (dayInfo == null) {
+			if (other.dayInfo != null) {
+				return false;
+			}
+		} else if (!dayInfo.equals(other.dayInfo)) {
+			return false;
+		}
+		if (destination != other.destination) {
+			return false;
+		}
+		if (source != other.source) {
+			return false;
+		}
+		if (Float.floatToIntBits(totalFare) != Float
+				.floatToIntBits(other.totalFare)) {
+			return false;
+		}
+		return true;
+	}
+
+}
+
+/**
+ * 
+ * Exception class supplied part of the Skeleton. Do not modify this class
+ * 
+ */
+class BusRouteManagerException extends Exception {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+
+	/**
+	 * @param message
+	 */
+	public BusRouteManagerException(String message) {
+		super(message);
+	}
+
+	/**
+	 * @param throwable
+	 */
+	public BusRouteManagerException(Throwable throwable) {
+		super(throwable);
+	}
+}
+
+*************************************************************************EOF*********************************************************
+/**************************************************************************************************/
+/* 
+ *  
+ * DO NOT ADD PACKAGE DECLARATION
+ * PLEASE NOTE: THIS SKELETON FILE MUST BE PLACED UNDER DEFAULT PACKAGE OF SRC FOLDER
+ * 
+ * ALL THE CODING MUST BE DONE INSIDE THIS SINGLE .JAVA FILE ONLY 
+ * DO NOT CREATE DEPENDENT CLASSES
+ * DO NOT MODIFY CODE SKELETON 
+ * DO NOT MODIFY: 
+ * 		ACCESS SPECIFIERS, RETURN TYPES OR DATA TYPES, EXCEPTION CLAUSES, 
+ * 	    CLASS OR METHOD NAMES IN THE SKELETON
+ *  
+ *  
+ *  YOU MUST CODE ON THE SAME PROJECT MAPPED IN EBOX VIEW THROUGHOUT THE ASSESSMENT
+ *  CLICK ON 'Problem/Project Status' BUTTON TO SEE THE PROJECT MAPPED IN EBOX
+ *  
+ *  YOU MUST CLICK ON 'SAVE PROJECT' BUTTON EVERY 10 MINUTES TO PERIODICALLY SAVE 
+ *  CTRL + S ALONE, WILL NOT BE SUFFICIENT TO SAVE YOUR CODE IN EBOX
+ *  CLICKING ON 'SAVE PROJECT' ENSURES NO LOSS OF CODE 
+ * 
+ *  REACH OUT TO PROCTORS FOR ANY QUERIES
+ *  
+ * 
+ * Skeleton Version 2.0
+ * Date Modified: 21-June-2016 
+ */
+/*************************************************************************************************/
+
+// imports here
+
+import java.awt.CardLayout;
+import java.io.BufferedReader;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
+import java.text.Format;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+/**
+ * This class must be used to write the solution for the given requirement. No
+ * additional classes must be created
+ * 
+ */
+public class CreditCardFineCalculator {
+	/**
+	 * @param filePath
+	 * @return Map<Integer, Map>
+	 * @throws CreditCardFineCalculatorException
+	 * 
+	 * 
+	 */
+	public Map<Integer, Map> getCreditCardFineDetails(String filePath)
+			throws CreditCardFineCalculatorException {
+		List<String[]> creditCardsDetails = readFromInputFile(filePath);
+		if (creditCardsDetails == null || creditCardsDetails.isEmpty()) {
+			throw new CreditCardFineCalculatorException("File is empty");
+		}
+		Map<Integer, Map> cardResultMap = validateInputsAndPopulate(creditCardsDetails);
+		// TODO Associate to type their code here
+		// TODO Associate to modify the return statement according to the
+		// requirement
+
+		return cardResultMap; // TODO Change this return value
+	}
+
+	private List<String[]> readFromInputFile(final String filePath)
+			throws CreditCardFineCalculatorException {
+		List<String[]> inputDataList = new ArrayList<String[]>();
+		try {
+			BufferedReader br = new BufferedReader(new FileReader(filePath));
+			String singleLineFromInput = null;
+
+			while ((singleLineFromInput = br.readLine()) != null) {
+				if (singleLineFromInput != null
+						&& singleLineFromInput.length() > 0) {
+					String[] wordsInSingleLine = wordsInSingleLine = singleLineFromInput
+							.split("\\|"); // this
+					// is
+					// special
+					inputDataList.add(wordsInSingleLine);
+				}
+			}
+
+		} catch (FileNotFoundException e) {
+			throw new CreditCardFineCalculatorException("Input File Not Found");
+		} catch (IOException e) {
+			throw new CreditCardFineCalculatorException(
+					"Input Output Exception");
+		}
+		return inputDataList;
+	}
+
+	private Map<Integer, Map> validateInputsAndPopulate(
+			final List<String[]> inputDataList)
+			throws CreditCardFineCalculatorException {
+		Map<String, CreditCardVO> visaMap = new HashMap<String, CreditCardVO>();
+		Map<String, CreditCardVO> amaxMap = new HashMap<String, CreditCardVO>();
+		Map<Integer, Map> resultMap = new HashMap<Integer, Map>();
+		CreditCardVO vo = new CreditCardVO();
+		String amexCardNo = null; // 16 digit
+		String visaCardNo = null; // 14 or 15 digit starting with 4 or 5
+		Date dueDate = null;
+		Date billPaidDate = null;
+		boolean dataFromFileIsOK = true;
+		int billAmount = 0;
+		boolean isVisaCard = false;
+		for (String[] singleRowOfInput : inputDataList) {
+			if (singleRowOfInput == null || singleRowOfInput.length < 5) {
+				throw new CreditCardFineCalculatorException(
+						"Input File Invalid");
+			}
+			if (singleRowOfInput[0].isEmpty() || singleRowOfInput[1].isEmpty()
+					|| singleRowOfInput[2].isEmpty()
+					|| singleRowOfInput[3].isEmpty()
+					|| singleRowOfInput[4].isEmpty()) {
+				throw new CreditCardFineCalculatorException(
+						"Input File Invalid");
+			}
+
+			vo = new CreditCardVO();
+			// -------------validate DUE date
+			dueDate = validateDate(singleRowOfInput[3]);
+			if (dueDate == null) {
+				dataFromFileIsOK = false; // discard the card
+				throw new CreditCardFineCalculatorException(
+						"DueDate is null for Card " + vo.getCreditCardNumber());
+			}
+
+			// -------------validate PAID date
+			billPaidDate = validateDate(singleRowOfInput[4]);
+			if (billPaidDate == null) {
+				dataFromFileIsOK = false; // discard the card
+				throw new CreditCardFineCalculatorException(
+						"billPaidDate is null for Card "
+								+ vo.getCreditCardNumber());
+			}
+
+			// ---------- calculate the amount to be paid
+			if (!isDigit(singleRowOfInput[2])) {
+				throw new CreditCardFineCalculatorException("Invalid amount");
+			}
+			billAmount = Integer.parseInt(singleRowOfInput[2]);
+			if (billAmount < 0) {
+				dataFromFileIsOK = false; // discard the card
+				throw new CreditCardFineCalculatorException(
+						"billAmount is less than 0 for Card "
+								+ vo.getCreditCardNumber());
+			}
+			String customerName = singleRowOfInput[1];
+			if (dataFromFileIsOK) {
+				vo.setCustomerName(customerName);
+				vo.setDueDate(dueDate);
+				vo.setPaymentDate(billPaidDate);
+				vo.setBillAmount(billAmount);
+			}
+			if (!isDigit(singleRowOfInput[0])) {
+				throw new CreditCardFineCalculatorException("Invalid card no");
+			}
+			String firstDigit = singleRowOfInput[0].substring(0, 1);
+			String twoDigit = singleRowOfInput[0].substring(0, 2);
+			if (singleRowOfInput[0] != null
+					&& singleRowOfInput[0].length() == 15
+					&& (twoDigit.equals("34") || twoDigit.equals("37"))) {
+				amexCardNo = singleRowOfInput[0].substring(0,
+						singleRowOfInput[0].length());
+				isVisaCard = false;
+				vo.setCreditCardNumber(amexCardNo);
+				if (delayedPayment(vo.getDueDate(), vo.getPaymentDate())) {
+					char grade = determineGrade(vo.getDueDate(),
+							vo.getPaymentDate());
+					vo.setCreditCardGrade(grade);
+					int fine = determineFineForAamax(vo.getDueDate(),
+							vo.getPaymentDate(), vo.getBillAmount());
+					vo.setFine(fine);
+				} else {
+					vo.setFine(0);
+					vo.setCreditCardGrade('A');// if there is no fine, then
+												// please put the
+					// // // value as 0
+				}
+
+			} else if (singleRowOfInput[0] != null
+					&& singleRowOfInput[0].length() == 16
+					&& firstDigit.equals("4")) {
+				visaCardNo = singleRowOfInput[0].substring(0,
+						singleRowOfInput[0].length());
+				isVisaCard = true;
+				vo.setCreditCardNumber(visaCardNo);
+				if (delayedPayment(vo.getDueDate(), vo.getPaymentDate())) {
+					char grade = determineGrade(vo.getDueDate(),
+							vo.getPaymentDate());
+					vo.setCreditCardGrade(grade);
+					// System.out.println("Grade::::::" + vo.getGrade());
+					int fine = determineFineForVisa(vo.getDueDate(),
+							vo.getPaymentDate(), vo.getBillAmount());
+					vo.setFine(fine);
+				} else {
+					vo.setFine(0); // if there is no fine, then please put the
+					vo.setCreditCardGrade('A'); // // value as 0.0
+				}
+
+			} else {
+				isVisaCard = false;
+				dataFromFileIsOK = false; // discard the card
+				throw new CreditCardFineCalculatorException(
+						"Invalid Credit Card Number "
+								+ singleRowOfInput[0].substring(0,
+										singleRowOfInput[0].length()));
+			}
+
+			if (isVisaCard) {
+				if (visaMap.get(vo.getCreditCardNumber()) != null) {
+					CreditCardVO cardVO = visaMap.get(vo.getCreditCardNumber());
+					if (checkLatestDate(cardVO.getPaymentDate(),
+							vo.getPaymentDate())) {
+						visaMap.put(vo.getCreditCardNumber(), vo);
+					}
+				} else {
+					visaMap.put(vo.getCreditCardNumber(), vo);
+				}
+
+			} else {
+				if (amaxMap.get(vo.getCreditCardNumber()) != null) {
+					CreditCardVO cardVO = amaxMap.get(vo.getCreditCardNumber());
+					if (checkLatestDate(cardVO.getPaymentDate(),
+							vo.getPaymentDate())) {
+						amaxMap.put(vo.getCreditCardNumber(), vo);
+					}
+				} else {
+					amaxMap.put(vo.getCreditCardNumber(), vo);
+				}
+
+			}
+		}
+		resultMap.put(new Integer(1), visaMap);
+		resultMap.put(new Integer(2), amaxMap);
+		return resultMap;
+	}
+
+	private Date validateDate(final String input)
+			throws CreditCardFineCalculatorException {
+		Date formattedDate = null;
+		if (input != null && input.length() > 1) {
+			SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
+			try {
+				sdf.setLenient(false);
+				formattedDate = sdf.parse(input);
+			} catch (ParseException e) {
+				throw new CreditCardFineCalculatorException(
+						"Parse Exception for Date " + input);
+			}
+		}
+		return formattedDate;
+	}
+
+	private boolean delayedPayment(Date dueDate, Date billPaidDate) {
+		if (billPaidDate.after(dueDate)) {
+			return true;
+		}
+		return false;
+	}
+
+	private boolean checkLatestDate(Date oldDate, Date newDate) {
+		if (newDate.after(oldDate)) {
+			return true;
+		}
+		return false;
+	}
+
+	private int determineFineForVisa(Date dueDate, Date billPaidDate,
+			int billAmount) {
+		int diffInDays = (int) ((billPaidDate.getTime() - dueDate.getTime()) / (1000 * 60 * 60 * 24));
+		int fine = 0;
+		if (diffInDays >= 1 && diffInDays < 5) {
+			fine = (int) (billAmount * .10);
+		} else if (diffInDays > 5) {
+			fine = (int) (billAmount * .20);
+		} else {
+			fine = 0;
+		}
+		return fine;
+	}
+
+	private int determineFineForAamax(Date dueDate, Date billPaidDate,
+			int billAmount) {
+		int diffInDays = (int) ((billPaidDate.getTime() - dueDate.getTime()) / (1000 * 60 * 60 * 24));
+		int fine = 0;
+		if (diffInDays >= 1 && diffInDays < 5) {
+			fine = (int) (billAmount * .10);
+		} else if (diffInDays > 5) {
+			if (billAmount <= 15000) {
+				fine = (int) (billAmount * .20);
+			} else {
+				fine = (int) (billAmount * .30);
+			}
+		} else {
+			fine = 0;
+		}
+		return fine;
+	}
+
+	private char determineGrade(Date dueDate, Date billPaidDate) {
+		char grade = 'A';
+		int diffInDays = (int) ((billPaidDate.getTime() - dueDate.getTime()) / (1000 * 60 * 60 * 24));
+		if (diffInDays <= 0) {
+			grade = 'A';
+		} else {
+			grade = 'B';
+		}
+		return grade;
+	}
+
+	private boolean isDigit(String number) {
+		boolean isDesigt = true;
+		try {
+			Double.parseDouble(number);
+		} catch (Exception e) {
+			isDesigt = false;
+		}
+		return isDesigt;
+	}
+}
+
+/**
+ * VO class supplied part of the Skeleton. Do not modify this class
+ * 
+ */
+class CreditCardVO {
+
+	private String creditCardNumber;
+	private int billAmount;
+	private int fine;
+	private Date dueDate;
+	private Date paymentDate;
+	private String customerName;
+	private char creditCardGrade;
+
+	/**
+	 * @return the creditCardNumber
+	 */
+	public String getCreditCardNumber() {
+		return creditCardNumber;
+	}
+
+	/**
+	 * @param creditCardNumber
+	 *            the creditCardNumber to set
+	 */
+	public void setCreditCardNumber(String creditCardNumber) {
+		this.creditCardNumber = creditCardNumber;
+	}
+
+	/**
+	 * @return the billAmount
+	 */
+	public int getBillAmount() {
+		return billAmount;
+	}
+
+	/**
+	 * @param billAmount
+	 *            the billAmount to set
+	 */
+	public void setBillAmount(int billAmount) {
+		this.billAmount = billAmount;
+	}
+
+	/**
+	 * @return the fine
+	 */
+	public int getFine() {
+		return fine;
+	}
+
+	/**
+	 * @param fine
+	 *            the fine to set
+	 */
+	public void setFine(int fine) {
+		this.fine = fine;
+	}
+
+	/**
+	 * @return the dueDate
+	 */
+	public Date getDueDate() {
+		return dueDate;
+	}
+
+	/**
+	 * @param dueDate
+	 *            the dueDate to set
+	 */
+	public void setDueDate(Date dueDate) {
+		this.dueDate = dueDate;
+	}
+
+	/**
+	 * @return the paymentDate
+	 */
+	public Date getPaymentDate() {
+		return paymentDate;
+	}
+
+	/**
+	 * @param paymentDate
+	 *            the paymentDate to set
+	 */
+	public void setPaymentDate(Date paymentDate) {
+		this.paymentDate = paymentDate;
+	}
+
+	/**
+	 * @return the customerName
+	 */
+	public String getCustomerName() {
+		return customerName;
+	}
+
+	/**
+	 * @param customerName
+	 *            the customerName to set
+	 */
+	public void setCustomerName(String customerName) {
+		this.customerName = customerName;
+	}
+
+	/**
+	 * @return the creditCardGrade
+	 */
+	public char getCreditCardGrade() {
+		return creditCardGrade;
+	}
+
+	/**
+	 * @param creditCardGrade
+	 *            the creditCardGrade to set
+	 */
+	public void setCreditCardGrade(char creditCardGrade) {
+		this.creditCardGrade = creditCardGrade;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see java.lang.Object#equals(java.lang.Object)
+	 */
+	@Override
+	public boolean equals(Object obj) {
+
+		CreditCardVO other = (CreditCardVO) obj;
+		Format formatter = new SimpleDateFormat("yyyy-MM-dd");
+
+		boolean isEqual = false;
+
+		if (creditCardGrade == other.creditCardGrade
+				&& creditCardNumber.equals(other.creditCardNumber)
+				&& fine == other.fine
+				&& formatter.format(paymentDate).equals(
+						formatter.format(other.paymentDate))) {
+			isEqual = true;
+
+		}
+		return isEqual;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see java.lang.Object#toString()
+	 */
+	@Override
+	public String toString() {
+		StringBuilder builder = new StringBuilder();
+		builder.append("CreditCardVO [creditCardNumber=");
+		builder.append(creditCardNumber);
+		builder.append(", billAmount=");
+		builder.append(billAmount);
+		builder.append(", fine=");
+		builder.append(fine);
+		builder.append(", dueDate=");
+		builder.append(dueDate);
+		builder.append(", paymentDate=");
+		builder.append(paymentDate);
+		builder.append(", customerName=");
+		builder.append(customerName);
+		builder.append(", creditCardGrade=");
+		builder.append(creditCardGrade);
+		builder.append("]");
+		return builder.toString();
+	}
+
+}
+
+/**
+ * 
+ * Exception class supplied part of the Skeleton. Do not modify this class
+ * 
+ */
+class CreditCardFineCalculatorException extends Exception {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+
+	/**
+	 * @param message
+	 */
+	public CreditCardFineCalculatorException(String message) {
+		super();
+	}
+
+	/**
+	 * @param throwable
+	 */
+	public CreditCardFineCalculatorException(Throwable throwable) {
+		super(throwable);
+	}
+}
+
+***********************************************************************EOF************************************************************
+package com.cts.ccd.exam;
+
+import java.io.BufferedReader;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.regex.Pattern;
+
+public class InsuranceWithoutMain {
+
+	static final String FILE_PATH = "C:\\Temp\\input.txt";
+	static ValueObject vo = new ValueObject();
+	static List<ValueObject> HTDelayedList = new ArrayList<ValueObject>();
+	static List<ValueObject> HTOnTimeList = new ArrayList<ValueObject>();
+	static List<ValueObject> MBDelayedList = new ArrayList<ValueObject>();
+	static List<ValueObject> MBOnTimeList = new ArrayList<ValueObject>();
+	static Map<String, Map<String, List<ValueObject>>> finalOutputMap = new HashMap<String, Map<String, List<ValueObject>>>();
+
+	public static void main(String[] args) {
+
+		/** Read the Input data from file */
+		List<String[]> inputDataList = readFromInputFile(FILE_PATH);
+
+		/** Validate the Input data and filter out the illegal data */
+		List<ValueObject> voList = validateInputs(inputDataList, vo);
+
+		/** Prepare final output MAP */
+		finalOutputMap = prepareFinalOutput(voList);
+
+	}
+
+	private static List<String[]> readFromInputFile(final String fileName) {
+		List<String[]> inputDataList = new ArrayList<String[]>();
+		try {
+			BufferedReader br = new BufferedReader(new FileReader(fileName));
+			String singleLineFromInput = null;
+			String[] wordsInSingleLine = new String[10];
+			while ((singleLineFromInput = br.readLine()) != null) {
+				if (null != singleLineFromInput
+						&& singleLineFromInput.length() > 0) {
+					wordsInSingleLine = singleLineFromInput.split(",");
+					inputDataList.add(wordsInSingleLine);
+				}
+			}
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return inputDataList;
+	}
+
+	private static List<ValueObject> validateInputs(
+			final List<String[]> inputDataList, ValueObject vo) {
+		final String PATTERN_POLICY_NO = "^(\\w{2})(/)(\\w{1})(\\d{5})(-)(\\d{8})";
+		List<ValueObject> voList = new ArrayList<ValueObject>();
+		String temp = null;
+		Date premiumDueDate = null;
+		Date premiumPaidDate = null;
+		double premAmt = 0.0;
+
+		// Iterating the rows of the Input File for Validation
+		for (String[] singleRowOfInput : inputDataList) {
+			vo = new ValueObject();
+			System.out
+					.println("----------------------------------------------------------------------");
+			boolean dataFromFileIsOK = true;
+			temp = null;
+			System.out.println("Validation Policy Number - "
+					+ singleRowOfInput[0]);
+
+			// Validation 1 ------ Policy Number ----------------------
+			if (null != singleRowOfInput[0]
+					&& singleRowOfInput[0].length() > 17) {
+				Pattern p1 = Pattern.compile(PATTERN_POLICY_NO);
+				if (p1.matcher(singleRowOfInput[0]).matches()) {
+					System.out
+							.println(" Policy Number PatternMatch Succesfull");
+					// Substring the Date within the Policy Number
+					temp = singleRowOfInput[0].substring(10,
+							singleRowOfInput[0].length());
+
+					// validating Date within the Policy Number
+					if (validateDate1(temp.toString())) {
+						System.out.println(" Date within Policy Number OK");
+						vo.setPolicyNo(singleRowOfInput[0]);
+					} else {
+						dataFromFileIsOK = false; // reject this row from Input
+													// file
+						continue; // leave processing this row and move to the
+									// next row
+					}
+				}
+			} else {
+				dataFromFileIsOK = false; // reject this row from Input file
+				continue; // leave processing this row and move to the next row
+			}
+
+			// Validation 2 ------ Premium Amount ----------------------
+			System.out.println("Validation Premium Amount - "
+					+ singleRowOfInput[2]);
+			if (null != singleRowOfInput[2] && singleRowOfInput[2].length() > 1) {
+				premAmt = Double.parseDouble(singleRowOfInput[2]);
+				if (premAmt < 0) {
+					System.out.println("Premium Amount is Negative");
+					dataFromFileIsOK = false; // reject this row from Input file
+					continue; // leave processing this row and move to the next
+								// row
+				}
+			}
+
+			// Validation 3 - Premium Due Date
+			System.out.println("Validation Premium Due Date - "
+					+ singleRowOfInput[3]);
+			premiumDueDate = validateDate2(singleRowOfInput[3].trim());
+			if (null == premiumDueDate) {
+				dataFromFileIsOK = false; // reject this row from Input file
+				continue; // leave processing this row and move to the next row
+			}
+
+			// Validation 4 - Premium Paid Date
+			System.out.println("Validation Premium Paid Date - "
+					+ singleRowOfInput[3]);
+			premiumPaidDate = validateDate2(singleRowOfInput[3].trim());
+			if (null == premiumPaidDate) {
+				dataFromFileIsOK = false; // reject this row from Input file
+				continue; // leave processing this row and move to the next row
+			}
+
+			// If all validation is passed then Add the Input data in VO and put
+			// it in the List
+			if (dataFromFileIsOK) {
+				vo.setPolicyNo(singleRowOfInput[0]);
+				vo.setPolicyHolderName(singleRowOfInput[1]);
+				vo.setPremiumAmt(premAmt);
+				vo.setPremiumDueDate(premiumDueDate);
+				vo.setPremiumPaidDate(premiumPaidDate);
+				voList.add(vo);
+			}
+
+		} // FOR LOOP ends - iteration of each
+		return voList;
+	}
+
+	/** This method will covert from String to Date using Pattern yyyyMMdd */
+	private static boolean validateDate1(final String input) {
+		boolean isValidDate = false;
+		if (null != input && input.length() > 1) {
+			SimpleDateFormat format = new SimpleDateFormat("yyyyMMdd");
+			try {
+				format.setLenient(false);
+				Date d = format.parse(input);
+				isValidDate = true;
+			} catch (ParseException e) {
+				System.out.println("Parse Exception Im-Proper Date");
+			}
+		}
+		return isValidDate;
+	}
+
+	/** This method will covert from String to Date using Pattern dd/MM/yyyy */
+	private static Date validateDate2(final String input) {
+		Date formattedDate = null;
+		if (null != input && input.length() > 1) {
+			SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
+			try {
+				sdf.setLenient(false);
+				formattedDate = sdf.parse(input);
+			} catch (ParseException e) {
+				System.out.println("Parse Exception Im-Proper Date");
+			}
+			System.out.println("Proper Date" + formattedDate);
+			return formattedDate;
+		}
+		return formattedDate;
+	}
+
+	private static Map<String, Map<String, List<ValueObject>>> prepareFinalOutput(
+			List<ValueObject> voList) {
+		for (ValueObject vo : voList) {
+
+			if (vo.getPolicyNo().contains("MB")) {
+				if (isDelayedPayment(vo.getPremiumDueDate(),
+						vo.getPremiumPaidDate())) {
+					vo.setFine(vo.getPremiumAmt() * 1.08);
+					MBDelayedList.add(vo);
+				} else {
+					MBOnTimeList.add(vo);
+				}
+
+			} else {
+				if (isDelayedPayment(vo.getPremiumDueDate(),
+						vo.getPremiumPaidDate())) {
+					vo.setFine(vo.getPremiumAmt() * 1.08);
+					HTDelayedList.add(vo);
+				} else {
+					HTOnTimeList.add(vo);
+				}
+
+			}
+		}
+
+		Map<String, List<ValueObject>> innerMapHT = new HashMap<String, List<ValueObject>>();
+		innerMapHT.put("DT", HTDelayedList);
+		innerMapHT.put("OT", HTOnTimeList);
+
+		Map<String, List<ValueObject>> innerMapMB = new HashMap<String, List<ValueObject>>();
+		innerMapHT.put("DT", MBDelayedList);
+		innerMapHT.put("OT", MBOnTimeList);
+
+		finalOutputMap.put("HT", innerMapHT);
+		finalOutputMap.put("MB", innerMapMB);
+
+		return finalOutputMap;
+	}
+
+	private static boolean isDelayedPayment(final Date dueDate,
+			final Date paidDate) {
+		if (paidDate.after(dueDate)) {
+			return true;
+		}
+		return false;
+	}
+
+}
+
+/** The Value Object Class where the data will be populated from the Input File */
+
+class ValueObject {
+	private String PolicyNo;
+	private String PolicyHolderName;
+	private Double PremiumAmt;
+	private Date PremiumDueDate;
+	private Date PremiumPaidDate;
+	private Double fine;
+
+	public String getPolicyNo() {
+		return PolicyNo;
+	}
+
+	public void setPolicyNo(String policyNo) {
+		PolicyNo = policyNo;
+	}
+
+	public String getPolicyHolderName() {
+		return PolicyHolderName;
+	}
+
+	public void setPolicyHolderName(String policyHolderName) {
+		PolicyHolderName = policyHolderName;
+	}
+
+	public Double getPremiumAmt() {
+		return PremiumAmt;
+	}
+
+	public void setPremiumAmt(Double premiumAmt) {
+		PremiumAmt = premiumAmt;
+	}
+
+	public Date getPremiumDueDate() {
+		return PremiumDueDate;
+	}
+
+	public void setPremiumDueDate(Date premiumDueDate) {
+		PremiumDueDate = premiumDueDate;
+	}
+
+	public Date getPremiumPaidDate() {
+		return PremiumPaidDate;
+	}
+
+	public void setPremiumPaidDate(Date premiumPaidDate) {
+		PremiumPaidDate = premiumPaidDate;
+	}
+
+	public Double getFine() {
+		return fine;
+	}
+
+	public void setFine(Double fine) {
+		this.fine = fine;
+	}
+
+}
+*****************************************************************EOF*************************************************************
+/**************************************************************************************************/
+/* 
+ *  
+ * DO NOT ADD PACKAGE DECLARATION
+ * PLEASE NOTE: THIS SKELETON FILE MUST BE PLACED UNDER DEFAULT PACKAGE OF SRC FOLDER
+ * 
+ * ALL THE CODING MUST BE DONE INSIDE THIS SINGLE .JAVA FILE ONLY 
+ * DO NOT CREATE DEPENDENT CLASSES
+ * DO NOT MODIFY CODE SKELETON 
+ * DO NOT MODIFY: 
+ * 		ACCESS SPECIFIERS, RETURN TYPES OR DATA TYPES, EXCEPTION CLAUSES, 
+ * 	    CLASS OR METHOD NAMES IN THE SKELETON
+ *  
+ *  
+ *  YOU MUST CODE ON THE SAME PROJECT MAPPED IN EBOX VIEW THROUGHOUT THE ASSESSMENT
+ *  CLICK ON 'Problem/Project Status' BUTTON TO SEE THE PROJECT MAPPED IN EBOX
+ *  
+ *  YOU MUST CLICK ON 'SAVE PROJECT' BUTTON EVERY 10 MINUTES TO PERIODICALLY SAVE 
+ *  CTRL + S ALONE, WILL NOT BE SUFFICIENT TO SAVE YOUR CODE IN EBOX
+ *  CLICKING ON 'SAVE PROJECT' ENSURES NO LOSS OF CODE 
+ * 
+ *  REACH OUT TO PROCTORS FOR ANY QUERIES
+ *  
+ * Skeleton Version 2.0
+ * Date Modified: 21-June-2016 
+ */
+/*************************************************************************************************/
+
+// imports here
+
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.ObjectInputStream.GetField;
+import java.lang.reflect.Method;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.regex.Pattern;
+
+/**
+ * This class must be used to write the solution for the given requirement. No
+ * additional classes must be created.  
+ * 
+ */
+public class PatientInformationTool {
+	
+	private static final String PHYSICIAN_GEN = "GEN";
+	private static final String PHYSICIAN_NEU = "NEU";
+	private static final String PHYSICIAN_ENT = "ENT";
+	private static final String DATE_FORMAT_DDMMYYYY = "dd/MM/yyyy";
+	private static final int INPUT_ARRARY_SIZE = 6;
+
+	/**
+	 * @param args
+	 */
+	public static void main(String[] args) {
+
+		// Change this to the absolute path where you have placed the input feed
+		String filePath = "C:\\Users\\Public\\Desktop\\Javaca\\SDE_7_SSH\\eclipse\\workspace\\java\\CoreJavaExam\\src\\input.txt";
+		PatientInformationTool informationTool=new PatientInformationTool();
+		try {
+			Map<Integer,Map> map = informationTool.getPatientDetails(filePath);
+			Map admissionMap=map.get(1);
+			System.out.println(map.get(1).toString());
+			System.out.println(map.get(2).toString());
+		} catch (PatientInformationDetailsException e) {
+			System.out.println("Execption occured");
+		}
+		
+		
+		/*
+		 * Run the following code snippet to validate your code structure before
+		 * uploading the code. Do not edit this code.
+		 */
+		
+
+	}
+
+	/**
+	 * @param filePath
+	 * @return Map<Integer, Map>
+	 * @throws PatientInformationDetailsException
+	 */
+	public Map<Integer, Map> getPatientDetails(final String filePath)
+			throws PatientInformationDetailsException {
+
+		Map<Integer, Map> outputMap = new HashMap<Integer, Map>();
+		Map<String, Integer> physicianTypeMap = new HashMap<String, Integer>();
+		Map<String, List<PatientVO>> admissionMap = new HashMap<String, List<PatientVO>>();
+		List<PatientVO> patientVOs = new ArrayList<PatientVO>();
+		FileReader fileReader;
+		BufferedReader reader;
+		String fileContent;
+
+		try {
+			if (!isStringNullOrEmpty(filePath)) {
+				File file = new File(filePath);
+				fileReader = new FileReader(file);
+				reader = new BufferedReader(fileReader);
+				while (!isStringNullOrEmpty(fileContent = reader.readLine())) {
+					String[] values = fileContent.split(";");
+					PatientVO patientVO = new PatientVO();
+					if (!validateData(values)) {
+						throw new PatientInformationDetailsException(
+								"Validation Failed");
+					} else {
+						patientVO = populatePatientVO(values, patientVO);
+						patientVOs.add(patientVO);
+					}
+
+				}
+
+				populatePhysicianMap(patientVOs, physicianTypeMap);
+				populateAdmissionMap(patientVOs, admissionMap);
+				outputMap.put(1, admissionMap);
+				outputMap.put(2, physicianTypeMap);
+
+			} else {
+				throw new FileNotFoundException("File path not provided");
+			}
+		} catch (FileNotFoundException e) {
+			throw new PatientInformationDetailsException("File not found");
+		} catch (IOException e) {
+			throw new PatientInformationDetailsException(
+					"IO Exception happened");
+		}
+
+		return outputMap;
+		
+	}
+	
+	/**
+	 * Populate final admission map
+	 * @param patientVOs
+	 * @param admissionMap
+	 */
+	private void populateAdmissionMap(List<PatientVO> patientVOs,
+			Map<String, List<PatientVO>> admissionMap) {
+
+		for (PatientVO patientVO : patientVOs) {
+			String date = convertDateToString(patientVO.getAdmissionDate());
+			if (admissionMap.get(date) != null) {
+				admissionMap.get(date).add(patientVO);
+			} else {
+				List<PatientVO> patientVOList = new ArrayList<PatientVO>();
+				patientVOList.add(patientVO);
+				admissionMap.put(date, patientVOList);
+			}
+		}
+
+	}
+	
+	
+
+	/**
+	 * Utility method for date to string conversion
+	 * @param admissionDate
+	 * @return
+	 */
+	private String convertDateToString(Date admissionDate) {
+		SimpleDateFormat dateFormat=new SimpleDateFormat(DATE_FORMAT_DDMMYYYY);
+		return dateFormat.format(admissionDate);
+		
+	}
+
+	/**
+	 * Populate final physician try map
+	 * @param patientVOs
+	 * @param physicianTypeMap
+	 */
+	private void populatePhysicianMap(
+			List<PatientVO> patientVOs, Map<String, Integer> physicianTypeMap) {
+		physicianTypeMap.put(PHYSICIAN_GEN, 0);
+		physicianTypeMap.put(PHYSICIAN_ENT, 0);
+		physicianTypeMap.put(PHYSICIAN_NEU, 0);
+		for (PatientVO patientVO : patientVOs) {
+			if (PHYSICIAN_GEN.equals(getPhysicianType(patientVO.getPhysicianId()))) {
+				physicianTypeMap.put(PHYSICIAN_GEN, physicianTypeMap.get(PHYSICIAN_GEN) + 1);
+			} else if (PHYSICIAN_NEU
+					.equals(getPhysicianType(patientVO.getPhysicianId()))) {
+				physicianTypeMap.put(PHYSICIAN_NEU, physicianTypeMap.get(PHYSICIAN_NEU) + 1);
+			} else if (PHYSICIAN_ENT
+					.equals(getPhysicianType(patientVO.getPhysicianId()))) {
+				physicianTypeMap.put(PHYSICIAN_ENT, physicianTypeMap.get(PHYSICIAN_ENT) + 1);
+			}
+		}
+	}
+
+	/**
+	 * Populate PatientVO object
+	 * @param values
+	 * @param patientVO
+	 * @return
+	 */
+	private PatientVO populatePatientVO(String[] values, PatientVO patientVO) {
+		patientVO.setName(values[0]);
+		patientVO.setMrn(values[1]);
+		patientVO.setGender(values[2]);
+		patientVO.setPhysicianId(values[3]);
+		patientVO.setAdmissionDate(convertStringToDate(values[4]));
+		patientVO.setDischargeDate(convertStringToDate(values[5]));
+		patientVO.setBill(calculateBill(patientVO.getAdmissionDate(),
+				patientVO.getDischargeDate(),
+				getPhysicianType(patientVO.getPhysicianId())));
+		return patientVO;
+	}
+
+	/**
+	 * Find Physician Type
+	 * @param physicianId
+	 * @return
+	 */
+	private String getPhysicianType(String physicianId) {
+		return physicianId.substring(5);
+	}
+
+	/**
+	 * Calculate bill for patients
+	 * @param admissionDate
+	 * @param dischargeDate
+	 * @param physicianType
+	 * @return
+	 */
+	private int calculateBill(Date admissionDate, Date dischargeDate,
+			String physicianType) {
+		int duration = calculateDuration(admissionDate, dischargeDate);
+		int bill = 0;
+		if (PHYSICIAN_GEN.equals(physicianType)) {
+			bill = duration * 1250;
+		} else if (PHYSICIAN_NEU.equals(physicianType)) {
+			bill = duration * 1750;
+		} else if (PHYSICIAN_ENT.equals(physicianType)) {
+			bill = duration * 1500;
+		}
+		return bill;
+	}
+
+	/**
+	 * Calculate duration
+	 * @param admissionDate
+	 * @param dischargeDate
+	 * @return
+	 */
+	private int calculateDuration(Date admissionDate, Date dischargeDate) {
+		return (int) ((dischargeDate.getTime()-admissionDate.getTime())/(1000*24*60*60));
+	}
+
+	/**
+	 * Parse data and check mandatory inputs
+	 * @param values
+	 * @return
+	 */
+	private boolean validateData(String[] values) {
+		if (values.length < INPUT_ARRARY_SIZE || !isMandatoryFieldsPresent(values)
+				|| !isValidAdmission(values[4], values[5])
+				|| !isValidMRN(values[1])
+				|| !isValidName(values[0])
+				|| !isValidPhysicianID(values[3])
+				|| !isValidGender(values[2])) {
+			return false;
+		}
+		return true;
+	}
+	
+	/**
+	 * Validate admission date
+	 * @param date1
+	 * @param date2
+	 * @return
+	 */
+	private boolean isValidAdmission(String date1, String date2) {
+		return (null != convertStringToDate(date2.trim()) && null != convertStringToDate(date1
+				.trim())) ? (date1.trim().equals(date2.trim()) || convertStringToDate(date1.trim()).before(
+				convertStringToDate(date2.trim()))) : false;
+	}
+	
+	/**
+	 * Validate gender
+	 * @param str
+	 * @return
+	 */
+	private boolean isValidGender(String str){
+		return Pattern.matches("(M|F)", str.trim());
+	}
+	
+	/**
+	 * Validate Physician ID
+	 * @param str
+	 * @return
+	 */
+	private boolean isValidPhysicianID(String str){
+		return Pattern.matches("[0-9]{4}-(NEU|GEN|ENT)", str.trim());
+	}
+	
+	/**
+	 * Validate MRN
+	 * @param str
+	 * @return
+	 */
+	private boolean isValidMRN(String str){
+		return Pattern.matches("(IN|OUT)[0-9]*$", str.trim());
+	}
+	
+	/**
+	 * @param Validate patient name
+	 * @return
+	 */
+	private boolean isValidName(String str) {
+		for (Character c : str.toCharArray()) {
+			if (!Character.isLetter(c) && !Character.isSpaceChar(c)) {
+				return false;
+			}
+		}
+		return true;
+	}
+	
+	
+	/**
+	 * Convert string to date
+	 * @param str
+	 * @return
+	 */
+	private Date convertStringToDate(String str){
+		Date date=new Date();
+		SimpleDateFormat dateFormat=new SimpleDateFormat(DATE_FORMAT_DDMMYYYY);
+		dateFormat.setLenient(false);
+		try {
+			date=dateFormat.parse(str.trim());
+		} catch (ParseException e) {
+			return null;
+		}
+		return date;
+	}
+	
+	/**
+	 * Validate madatory fields
+	 * @param values
+	 * @return
+	 */
+	private boolean isMandatoryFieldsPresent(String[] values){
+		for(String str : values){
+			if(isStringNullOrEmpty(str)){
+				return false;
+			}
+		}
+		return true;
+	}
+
+	/**
+	 * Utility method to check if string null or empty
+	 * @param str
+	 * @return
+	 */
+	private boolean isStringNullOrEmpty(String str){
+		return (null==str || str.isEmpty());
+	}
+}
+
+
+/**
+ * VO class supplied part of the Skeleton. Do not modify this class
+ * 
+ */
+class PatientVO {
+	private String name;
+	private String mrn;
+	private String gender;
+	private String physicianId;
+	private Date admissionDate;
+	private Date dischargeDate;
+	private int bill;
+
+	/**
+	 * @return the name
+	 */
+	public String getName() {
+		return name;
+	}
+
+	/**
+	 * @param name the name to set
+	 */
+	public void setName(String name) {
+		this.name = name;
+	}
+
+	/**
+	 * @return the mrn
+	 */
+	public String getMrn() {
+		return mrn;
+	}
+
+	/**
+	 * @param mrn the mrn to set
+	 */
+	public void setMrn(String mrn) {
+		this.mrn = mrn;
+	}
+
+	/**
+	 * @return the gender
+	 */
+	public String getGender() {
+		return gender;
+	}
+
+	/**
+	 * @param gender the gender to set
+	 */
+	public void setGender(String gender) {
+		this.gender = gender;
+	}
+
+	/**
+	 * @return the physicianId
+	 */
+	public String getPhysicianId() {
+		return physicianId;
+	}
+
+	/**
+	 * @param physicianId the physicianId to set
+	 */
+	public void setPhysicianId(String physicianId) {
+		this.physicianId = physicianId;
+	}
+
+	/**
+	 * @return the admissionDate
+	 */
+	public Date getAdmissionDate() {
+		return admissionDate;
+	}
+
+	/**
+	 * @param admissionDate the admissionDate to set
+	 */
+	public void setAdmissionDate(Date admissionDate) {
+		this.admissionDate = admissionDate;
+	}
+
+	/**
+	 * @return the dischargeDate
+	 */
+	public Date getDischargeDate() {
+		return dischargeDate;
+	}
+
+	/**
+	 * @param dischargeDate the dischargeDate to set
+	 */
+	public void setDischargeDate(Date dischargeDate) {
+		this.dischargeDate = dischargeDate;
+	}
+
+	/**
+	 * @return the bill
+	 */
+	public int getBill() {
+		return bill;
+	}
+
+	/**
+	 * @param bill the bill to set
+	 */
+	public void setBill(int bill) {
+		this.bill = bill;
+	}
+
+	/* (non-Javadoc)
+	 * @see java.lang.Object#toString()
+	 */
+	@Override
+	public String toString() {
+		StringBuilder builder = new StringBuilder();
+		builder.append("PatientVO [name=");
+		builder.append(name);
+		builder.append(", mrn=");
+		builder.append(mrn);
+		builder.append(", gender=");
+		builder.append(gender);
+		builder.append(", physicianId=");
+		builder.append(physicianId);
+		builder.append(", admissionDate=");
+		builder.append(admissionDate);
+		builder.append(", dischargeDate=");
+		builder.append(dischargeDate);
+		builder.append(", bill=");
+		builder.append(bill);
+		builder.append("]");
+		return builder.toString();
+	}
+
+	/* (non-Javadoc)
+	 * @see java.lang.Object#equals(java.lang.Object)
+	 */
+	@Override
+	public boolean equals(Object object) {
+		boolean isEqual = false;
+		PatientVO other = (PatientVO) object;
+		if ((this.getMrn().equals(other.getMrn()))
+				&& (this.getPhysicianId().equals(other.getPhysicianId()))
+				&& (this.getAdmissionDate().equals(other.getAdmissionDate()))
+				&& (this.getBill() == other.getBill())
+				&& (this.getDischargeDate().equals(other.getDischargeDate()))) {
+			isEqual = true;
+		}
+		return isEqual;
+	}
+
+}
+/**
+ * 
+ * Exception class supplied part of the Skeleton. Do not modify this class
+ * 
+ */
+class PatientInformationDetailsException extends Exception {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -217307602928815575L;
+
+	public PatientInformationDetailsException(String message) {
+		super(message);
+	}
+
+	public PatientInformationDetailsException(Throwable throwable) {
+		super(throwable);
+	}
+
+	public PatientInformationDetailsException(String message,
+			Throwable throwable) {
+		super(message, throwable);
+	}
+}
+******************************************************EOF***************************************************************************
+/**************************************************************************************************/
+/* 
+ *  
+ * DO NOT ADD PACKAGE DECLARATION
+ * PLEASE NOTE: THIS SKELETON FILE MUST BE PLACED UNDER DEFAULT PACKAGE OF SRC FOLDER
+ * 
+ * ALL THE CODING MUST BE DONE INSIDE THIS SINGLE .JAVA FILE ONLY 
+ * DO NOT CREATE DEPENDENT CLASSES
+ * DO NOT MODIFY CODE SKELETON 
+ * DO NOT MODIFY: 
+ * 		ACCESS SPECIFIERS, RETURN TYPES OR DATA TYPES, EXCEPTION CLAUSES, 
+ * 	    CLASS OR METHOD NAMES IN THE SKELETON
+ *  
+ *  
+ *  YOU MUST CODE ON THE SAME PROJECT MAPPED IN EBOX VIEW THROUGHOUT THE ASSESSMENT
+ *  CLICK ON 'Problem/Project Status' BUTTON TO SEE THE PROJECT MAPPED IN EBOX
+ *  
+ *  YOU MUST CLICK ON 'SAVE PROJECT' BUTTON EVERY 10 MINUTES TO PERIODICALLY SAVE 
+ *  CTRL + S ALONE, WILL NOT BE SUFFICIENT TO SAVE YOUR CODE IN EBOX
+ *  CLICKING ON 'SAVE PROJECT' ENSURES NO LOSS OF CODE 
+ * 
+ *  REACH OUT TO PROCTORS FOR ANY QUERIES
+ *  
+ * Skeleton Version 2.0
+ * Date Modified: 21-June-2016 
+ */
+/*************************************************************************************************/
+
+// imports goes here
+
+import java.io.BufferedReader;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
+import java.lang.reflect.Method;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+/**
+ * This class must be used to write the solution for the given requirement. No
+ * additional classes must be created.  
+ * 
+ */
+public class TrustLoanSanctioner {
+
+	/**
+	 * @param args
+	 * @throws TrustLoanException 
+	 */
+	public static void main(String[] args) throws TrustLoanException {
+		// Change this to the absolute path where you have placed the input feed
+		//String filePath = "D:\\javaca\\ccjp.txt";
+		String filePath = "input.txt";
+		TrustLoanSanctioner tsm = new TrustLoanSanctioner();
+		Map<Integer, Map<String, List<PolicyHolderVO>>> outerMap = tsm.loanProcessor(filePath,"12/12/2017");
+		System.out.println(outerMap.get(1));
+		System.out.println(outerMap.get(2));
+		/*
+		 * Run the following code snippet to validate your code structure before
+		 * uploading the code. Do not edit this code.
+		 */
+		
+		
+		
+	}
+
+	/**
+	 * @param filePath
+	 * @param sanctionDate
+	 * @return Map<Integer, Map<String, List<PolicyHolderVO>>>
+	 * @throws TrustLoanException
+	 */
+	public Map<Integer, Map<String, List<PolicyHolderVO>>> loanProcessor(String filePath, String sanctionDate)
+			throws TrustLoanException {
+
+		// TODO Associate to type their code here
+		// TODO Associate to modify the return statement according to the
+		// requirement
+
+		BufferedReader bufferReader = null;
+		SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy");
+		Map<Integer, Map<String, List<PolicyHolderVO>>> outerMap = new HashMap<Integer, Map<String, List<PolicyHolderVO>>>();
+
+		try {
+
+			Map<String, List<PolicyHolderVO>> innerFirstMap = new HashMap<String, List<PolicyHolderVO>>();
+			Map<String, List<PolicyHolderVO>> innerSecondMap = new HashMap<String, List<PolicyHolderVO>>();
+			List<PolicyHolderVO> elgHolderVOs = new ArrayList<PolicyHolderVO>();
+			List<PolicyHolderVO> nelgHolderVOs = new ArrayList<PolicyHolderVO>();
+			List<String> policyNumberList = new ArrayList<String>();
+			List<PolicyHolderVO> duplicateList = new ArrayList<PolicyHolderVO>();
+			List<PolicyHolderVO> invalidList = new ArrayList<PolicyHolderVO>();
+
+			bufferReader = new BufferedReader(new FileReader(filePath));
+			String currentLine = null;
+
+			while ((currentLine = bufferReader.readLine()) != null) {
+				
+				String[] tokens = currentLine.split(";");
+
+				System.out.println(currentLine);
+
+				if (!validateData(tokens)) {
+					throw new TrustLoanException("Data validation error.");
+
+				} else {
+
+					System.out.println("validated successfully");
+					
+					Date sactionDate = formatter.parse(sanctionDate);
+					float sumAssurred = Float.parseFloat(tokens[0].substring(9, tokens[0].length()));
+					
+					PolicyHolderVO policyHolderVO = new PolicyHolderVO();
+
+					policyHolderVO.setPolicyCode(tokens[0]);
+					policyHolderVO.setPan(tokens[1]);
+					policyHolderVO.setPolicyStartDate(formatter.parse(tokens[2]));
+					policyHolderVO.setPeriod(Integer.parseInt(tokens[3]));
+					policyHolderVO.setAccumulatedPremiumAmount(Float.parseFloat(tokens[4]));
+					policyHolderVO.setRequestedLoanAmount(Float.parseFloat(tokens[5]));
+
+					Calendar cal = Calendar.getInstance();
+					cal.setTime(policyHolderVO.getPolicyStartDate());
+					cal.add(Calendar.MONTH, policyHolderVO.getPeriod());
+					policyHolderVO.setPolicyEndDate(cal.getTime());
+
+					if (tokens[0].startsWith("NRM")) {
+						if (policyHolderVO.getRequestedLoanAmount() > (0.4 * policyHolderVO.getAccumulatedPremiumAmount())) {
+
+							policyHolderVO.setNetPremiumAmount(policyHolderVO.getAccumulatedPremiumAmount());
+							nelgHolderVOs.add(policyHolderVO);
+
+						} else if (policyHolderVO.getRequestedLoanAmount() < (0.4 * policyHolderVO.getAccumulatedPremiumAmount())) {
+
+							policyHolderVO.setNetPremiumAmount(calculateNetPremiumAmount(sumAssurred, policyHolderVO, sactionDate));
+							elgHolderVOs.add(policyHolderVO);
+						
+						}
+					}
+
+					if (tokens[0].startsWith("FST")) {
+						if (policyHolderVO.getRequestedLoanAmount() < (0.6 * policyHolderVO.getAccumulatedPremiumAmount())) {
+							
+							policyHolderVO.setNetPremiumAmount(calculateNetPremiumAmount(sumAssurred, policyHolderVO, sactionDate));
+							elgHolderVOs.add(policyHolderVO);
+						
+						} else if ((policyHolderVO.getRequestedLoanAmount() > (0.6 * policyHolderVO.getAccumulatedPremiumAmount()))
+								&& (policyHolderVO.getRequestedLoanAmount() < (0.7 * sumAssurred))) {
+							
+							policyHolderVO.setNetPremiumAmount(calculateNetPremiumAmount(sumAssurred, policyHolderVO, sactionDate));
+							elgHolderVOs.add(policyHolderVO);
+						
+						} else if ((policyHolderVO.getRequestedLoanAmount() > (0.6 * policyHolderVO.getAccumulatedPremiumAmount()))
+								&& (policyHolderVO.getRequestedLoanAmount() > (0.7 * sumAssurred))) {
+							
+							policyHolderVO.setNetPremiumAmount(policyHolderVO.getAccumulatedPremiumAmount());
+							nelgHolderVOs.add(policyHolderVO);
+						
+						}
+					}
+					
+					if (policyNumberList.isEmpty()) {
+						policyNumberList.add(tokens[0].substring(4, 8));
+					} else {
+						for (String polNum : policyNumberList) {
+							if (polNum.equals(tokens[0].substring(4, 8))) {
+								duplicateList.add(policyHolderVO);
+							}
+						}
+						policyNumberList.add(tokens[0].substring(4, 8));
+					}
+
+					if (Float.parseFloat(tokens[5]) > sumAssurred) {
+						invalidList.add(policyHolderVO);
+					}
+				}
+
+			}
+
+			System.out.println(elgHolderVOs);
+			System.out.println(nelgHolderVOs);
+			
+			innerFirstMap.put("ELG", elgHolderVOs);
+			innerFirstMap.put("NELG", nelgHolderVOs);
+			innerSecondMap.put("DUP", duplicateList);
+			innerSecondMap.put("INV", invalidList);
+			outerMap.put(new Integer(1), innerFirstMap);
+			outerMap.put(new Integer(2), innerSecondMap);
+
+		} catch (FileNotFoundException e) {
+			throw new TrustLoanException("File not found error" + e.getMessage());
+		} catch (IOException e) {
+			throw new TrustLoanException("File read error" + e.getMessage());
+		} catch (ParseException pe) {
+			throw new TrustLoanException("Date format error" + pe.getMessage());
+		} finally {
+			try {
+				if (bufferReader != null)
+					bufferReader.close();
+			} catch (IOException ex) {
+				throw new TrustLoanException("Buffered Reader close error" + ex.getMessage());
+			}
+		}
+		return outerMap; // TODO Change this return value
+
+	}
+	
+
+	
+	private static boolean validateData(String[] str) {
+
+		if (str.length != 6)
+			return false;
+
+		for (int i = 0; i < str.length; i++) {
+			if (!checkAllFields(str[i])) {
+				System.out.println("1");
+				return false;
+			}
+		}
+
+		String policyType = str[0].substring(0, 3);
+		if (!policyType.equals("FST") && (!policyType.equals("NRM"))) {
+			System.out.println("2");
+			return false;
+		}
+
+		String policyNum = str[0].substring(4, 8);
+
+		for (int i = 0; i < policyNum.length(); i++) {
+			if (policyNum.charAt(i) == 0) {
+				System.out.println("2.1");
+				return false;
+			}
+			Character ch = policyNum.charAt(i);
+			if (!Character.isDigit(ch)) {
+				System.out.println("2.2");
+				return false;
+			}
+		}
+
+		String sumAssured = str[0].substring(9, str[0].length());
+		for (int i = 0; i < sumAssured.length(); i++) {
+			Character ch = sumAssured.charAt(i);
+			if (!Character.isDigit(ch)) {
+				System.out.println("3");
+				return false;
+			}
+		}
+
+		if (!str[1].startsWith("FR")) {
+			System.out.println("4");
+			return false;
+		}
+
+		String panNumber = str[1].substring(2, 5);
+		for (int i = 0; i < panNumber.length(); i++) {
+			Character ch = panNumber.charAt(i);
+			if (!Character.isDigit(ch)) {
+				System.out.println("5");
+				return false;
+			}
+		}
+
+		if (!isValidDate(str[2])) {
+			System.out.println("6");
+			return false;
+		}
+
+		if ((Integer.parseInt(sumAssured)) < (Integer.parseInt(str[4]))) {
+			System.out.println("7");
+			return false;
+		}
+
+		return true;
+	}
+	
+	private static boolean checkAllFields(String fields) {
+		if (fields != null && fields.isEmpty())
+			return false;
+		else
+			return true;
+	}
+	
+	private static boolean isValidDate(String strDate) { 
+		try{
+			Date date = new SimpleDateFormat("dd/MM/yyyy").parse(strDate);
+		}catch(ParseException pe){
+			return false;
+		}
+		return true;
+	}	
+	
+	private static float calculateNetPremiumAmount(float sumAssured,
+			PolicyHolderVO policyHolderVO, Date sanctionDate) {
+		float netPremiumAmount = 0.0f;
+		float calculatedPremiumAmount = (sumAssured / policyHolderVO
+				.getPeriod());
+		int loanPeriod = calculateLoanPeriod(policyHolderVO.getPolicyEndDate(),
+				sanctionDate);
+		float interest = (float) ((policyHolderVO.getRequestedLoanAmount() * 1.2 * loanPeriod)/100);
+		float incPremium = ((policyHolderVO.getRequestedLoanAmount() + interest)/loanPeriod);
+		netPremiumAmount = (calculatedPremiumAmount + incPremium );
+		return netPremiumAmount;
+
+	}
+	
+	private static int calculateLoanPeriod(Date policyEndDate, Date sanctionDate) {
+		int days = (int) ((policyEndDate.getTime()) - (sanctionDate.getTime())
+				/ (1000 * 24 * 60 * 60));
+		return (days / 30);
+	}
+	
+}
+
+/**
+ * VO class supplied part of the Skeleton. Do not modify this class
+ * 
+ */
+class PolicyHolderVO {
+	private String policyCode;
+	private String pan;
+	private Date policyStartDate;
+	private int period;
+	private float accumulatedPremiumAmount;
+	private float requestedLoanAmount;
+	private Date policyEndDate;
+	private float netPremiumAmount;
+
+	/**
+	 * @return the policyCode
+	 */
+	public String getPolicyCode() {
+		return policyCode;
+	}
+
+	/**
+	 * @param policyCode the policyCode to set
+	 */
+	public void setPolicyCode(String policyCode) {
+		this.policyCode = policyCode;
+	}
+
+	/**
+	 * @return the pan
+	 */
+	public String getPan() {
+		return pan;
+	}
+
+	/**
+	 * @param pan the pan to set
+	 */
+	public void setPan(String pan) {
+		this.pan = pan;
+	}
+
+	/**
+	 * @return the policyStartDate
+	 */
+	public Date getPolicyStartDate() {
+		return policyStartDate;
+	}
+
+	/**
+	 * @param policyStartDate the policyStartDate to set
+	 */
+	public void setPolicyStartDate(Date policyStartDate) {
+		this.policyStartDate = policyStartDate;
+	}
+
+	/**
+	 * @return the period
+	 */
+	public int getPeriod() {
+		return period;
+	}
+
+	/**
+	 * @param period the period to set
+	 */
+	public void setPeriod(int period) {
+		this.period = period;
+	}
+
+	/**
+	 * @return the accumulatedPremiumAmount
+	 */
+	public float getAccumulatedPremiumAmount() {
+		return accumulatedPremiumAmount;
+	}
+
+	/**
+	 * @param accumulatedPremiumAmount the accumulatedPremiumAmount to set
+	 */
+	public void setAccumulatedPremiumAmount(float accumulatedPremiumAmount) {
+		this.accumulatedPremiumAmount = accumulatedPremiumAmount;
+	}
+
+	/**
+	 * @return the requestedLoanAmount
+	 */
+	public float getRequestedLoanAmount() {
+		return requestedLoanAmount;
+	}
+
+	/**
+	 * @param requestedLoanAmount the requestedLoanAmount to set
+	 */
+	public void setRequestedLoanAmount(float requestedLoanAmount) {
+		this.requestedLoanAmount = requestedLoanAmount;
+	}
+
+	/**
+	 * @return the policyEndDate
+	 */
+	public Date getPolicyEndDate() {
+		return policyEndDate;
+	}
+
+	/**
+	 * @param policyEndDate the policyEndDate to set
+	 */
+	public void setPolicyEndDate(Date policyEndDate) {
+		this.policyEndDate = policyEndDate;
+	}
+
+	/**
+	 * @return the netPremiumAmount
+	 */
+	public float getNetPremiumAmount() {
+		return netPremiumAmount;
+	}
+
+	/**
+	 * @param netPremiumAmount the netPremiumAmount to set
+	 */
+	public void setNetPremiumAmount(float netPremiumAmount) {
+		this.netPremiumAmount = netPremiumAmount;
+	}
+
+	/* (non-Javadoc)
+	 * @see java.lang.Object#toString()
+	 */
+	@Override
+	public String toString() {
+		StringBuilder builder = new StringBuilder();
+		builder.append("PolicyHolderVO [policyCode=");
+		builder.append(policyCode);
+		builder.append(", pan=");
+		builder.append(pan);
+		builder.append(", policyStartDate=");
+		builder.append(policyStartDate);
+		builder.append(", period=");
+		builder.append(period);
+		builder.append(", accumulatedPremiumAmount=");
+		builder.append(accumulatedPremiumAmount);
+		builder.append(", requestedLoanAmount=");
+		builder.append(requestedLoanAmount);
+		builder.append(", policyEndDate=");
+		builder.append(policyEndDate);
+		builder.append(", netPremiumAmount=");
+		builder.append(netPremiumAmount);
+		builder.append("]");
+		return builder.toString();
+	}
+
+	/* (non-Javadoc)
+	 * @see java.lang.Object#equals(java.lang.Object)
+	 */
+	@Override
+	public boolean equals(Object object) {
+		boolean isEqual = false;
+		PolicyHolderVO other = (PolicyHolderVO) object;
+		System.out.println(this.getPolicyEndDate());
+		System.out.println(other.getPolicyEndDate());
+		if ((this.getPolicyCode().equals(other.getPolicyCode()))
+				&& (this.getPolicyStartDate()
+						.equals(other.getPolicyStartDate()))
+				&& (this.getAccumulatedPremiumAmount() == other
+						.getAccumulatedPremiumAmount())) {
+			isEqual = true;
+		}
+		return isEqual;
+	}
+
+}
+/**
+ * 
+ * Exception class supplied part of the Skeleton. Do not modify this class
+ * 
+ */
+class TrustLoanException extends Exception {
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+
+	public TrustLoanException(Throwable throwable) {
+		super(throwable);
+	}
+
+	public TrustLoanException(String message) {
+		super(message);
+
+	}
+
+	public TrustLoanException(String message, Throwable throwable) {
+		super(message, throwable);
+	}
+
+}
+
+********************************************************EOF***********************************************************************
+package com.cts.ccd.exam;
+
+import java.io.BufferedReader;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+public class CreditCardMainMap {
+
+	// --DELETE THIS BLOCK - START --------
+	public static void main(String args[]) throws CreditCardException {
+		final String file_path = "C:\\Temp\\cardInputFile.txt";
+		CreditCardMainMap cc = new CreditCardMainMap();
+		cc.execute(file_path);
+	}
+
+	// --DELETE THIS BLOCK - END --------
+
+	public Map<String, Map<String, ValueObjectForCards1>> execute(
+			String filename) throws CreditCardException {
+
+		Map<String, Map<String, ValueObjectForCards1>> finalOutputMap = new HashMap<String, Map<String, ValueObjectForCards1>>();
+		List<String[]> inputDataList = readFromInputFile(filename);
+		Map<String, ValueObjectForCards1> voMap = validateInputs(inputDataList);
+		finalOutputMap = prepareFinalOutput(voMap);
+		// this is only for testing, do not write this in exam
+		printOutputForTesting(finalOutputMap);
+		return finalOutputMap;
+	}
+
+	private Map<String, Map<String, ValueObjectForCards1>> prepareFinalOutput(
+			Map<String, ValueObjectForCards1> voMap) {
+		Map<String, ValueObjectForCards1> innerVisaMap = new HashMap<String, ValueObjectForCards1>();
+		Map<String, ValueObjectForCards1> innerAmexMap = new HashMap<String, ValueObjectForCards1>();
+		Map<String, Map<String, ValueObjectForCards1>> finalOutputMap = new HashMap<String, Map<String, ValueObjectForCards1>>();
+
+		for (String key : voMap.keySet()) {
+			ValueObjectForCards1 vo = voMap.get(key);
+			if (vo.getCardType().equals("Visa")) {
+				if (delayedPayment(vo.getDueDate(), vo.getBillDate())) {
+					String grade = determineGrade(vo.getCardType(),
+							vo.getDueDate(), vo.getBillDate());
+					vo.setGrade(grade);
+					System.out.println("Grade::::::" + vo.getGrade());
+					Double fine = determineFine(vo.getGrade(),
+							vo.getBillAmount());
+					vo.setFine(fine);
+					System.out.println("Fine::::" + fine);
+				} else {
+					vo.setFine(0.0); // if there is no fine, then please put the
+										// value as 0.0
+				}
+				innerVisaMap.put(vo.getCardNo(), vo);
+			} else {
+				if (delayedPayment(vo.getDueDate(), vo.getBillDate())) {
+					String grade = determineGrade(vo.getCardType(),
+							vo.getDueDate(), vo.getBillDate());
+					vo.setGrade(grade);
+					System.out.println("Grade::::::" + vo.getGrade());
+					Double fine = determineFine(vo.getGrade(),
+							vo.getBillAmount());
+					vo.setFine(fine);
+					System.out.println("Fine::::" + fine);
+				} else {
+					vo.setFine(0.0); // if there is no fine, then please put the
+										// value as 0.0
+				}
+
+				innerAmexMap.put(vo.getCardNo(), vo);
+			}
+
+		}
+		finalOutputMap.put("Visa", innerVisaMap);
+		finalOutputMap.put("Amex", innerAmexMap);
+		return finalOutputMap;
+	}
+
+	private void printOutputForTesting(
+			Map<String, Map<String, ValueObjectForCards1>> finalOutputMap) {
+		Map<String, ValueObjectForCards1> innerVisaMap = finalOutputMap
+				.get("Visa");
+		Map<String, ValueObjectForCards1> innerAmexMap = finalOutputMap
+				.get("Amex");
+
+		System.out.println("VISA MAP");
+		for (String key : innerVisaMap.keySet()) {
+			ValueObjectForCards1 vo = innerVisaMap.get(key);
+			System.out.println(vo.getCardNo() + " | " + vo.getCardType()
+					+ " | " + vo.getBillAmount() + " | " + vo.getBillDate()
+					+ " | " + vo.getDueDate() + " | " + vo.getFine());
+		}
+
+		System.out.println("AMEX MAP");
+		for (String key : innerAmexMap.keySet()) {
+			ValueObjectForCards1 vo = innerAmexMap.get(key);
+			System.out.println(vo.getCardNo() + " | " + vo.getCardType()
+					+ " | " + vo.getBillAmount() + " | " + vo.getBillDate()
+					+ " | " + vo.getDueDate() + " | " + vo.getFine());
+		}
+
+	}
+
+	private Double determineFine(String grade, Double billAmount) {
+		Double fine = 0.0;
+		if (grade.equals("A")) {
+			fine = billAmount * 0.15;
+		} else if (grade.equals("B")) {
+			fine = billAmount * 0.2;
+		}
+		return fine;
+	}
+
+	private String determineGrade(String cardType, Date dueDate,
+			Date billPaidDate) {
+		String grade = "";
+		int diffInDays = (int) ((billPaidDate.getTime() - dueDate.getTime()) / (1000 * 60 * 60 * 24));
+		// System.out.println("diffInDays::::::::::::"+diffInDays);
+		if (diffInDays > 1 && diffInDays < 5) {
+			grade = "A";
+		} else if (diffInDays > 5) {
+			grade = "B";
+		}
+		return grade;
+	}
+
+	private boolean delayedPayment(Date dueDate, Date billPaidDate) {
+		if (billPaidDate.after(dueDate)) {
+			return true;
+		}
+		return false;
+	}
+
+	private Map<String, ValueObjectForCards1> validateInputs(
+			final List<String[]> inputDataList) throws CreditCardException {
+		Map<String, ValueObjectForCards1> voMap = new HashMap<String, ValueObjectForCards1>();
+		ValueObjectForCards1 vo = new ValueObjectForCards1();
+		String amexCardNo = null; // 16 digit
+		String visaCardNo = null; // 14 or 15 digit starting with 4 or 5
+		Date dueDate = null;
+		Date billPaidDate = null;
+		boolean dataFromFileIsOK = true;
+		double billAmount = 0.0;
+
+		for (String[] singleRowOfInput : inputDataList) {
+			vo = new ValueObjectForCards1();
+			// -------------- for card no and card type validation
+			String firstDigit = singleRowOfInput[0].substring(0, 1);
+			if (singleRowOfInput[0] != null
+					&& singleRowOfInput[0].length() > 15) {
+				amexCardNo = singleRowOfInput[0].substring(0,
+						singleRowOfInput[0].length());
+				vo.setCardType("Amex");
+				vo.setCardNo(amexCardNo);
+				System.out.println("amexCardNo:::" + vo.getCardNo()
+						+ ":CardType:" + vo.getCardType());
+
+			} else if (singleRowOfInput[0] != null
+					&& singleRowOfInput[0].length() < 16
+					&& firstDigit.equals("4") || firstDigit.equals("5")) {
+				visaCardNo = singleRowOfInput[0].substring(0,
+						singleRowOfInput[0].length());
+				vo.setCardType("Visa");
+				vo.setCardNo(visaCardNo);
+				System.out.println("visaCardNo:::" + vo.getCardNo()
+						+ ":CardType:" + vo.getCardType());
+
+			} else {
+				dataFromFileIsOK = false; // discard the card
+				throw new CreditCardException("Invalid Credit Card Number "
+						+ singleRowOfInput[0].substring(0,
+								singleRowOfInput[0].length()));
+			}
+
+			// -------------validate DUE date
+			dueDate = validateDate(singleRowOfInput[1]);
+			if (dueDate == null) {
+				dataFromFileIsOK = false; // discard the card
+				throw new CreditCardException("DueDate is null for Card "
+						+ vo.getCardNo());
+			}
+
+			// -------------validate PAID date
+			billPaidDate = validateDate(singleRowOfInput[2]);
+			// System.out.println("billPaidDate:::::" + billPaidDate);
+			if (billPaidDate == null) {
+				dataFromFileIsOK = false; // discard the card
+				throw new CreditCardException("billPaidDate is null for Card "
+						+ vo.getCardNo());
+			}
+
+			// ---------- calculate the amount to be paid
+			billAmount = Double.parseDouble(singleRowOfInput[3]);
+			// System.out.println("Bill amount::::"+billAmount);
+			if (billAmount < 0) {
+				dataFromFileIsOK = false; // discard the card
+				throw new CreditCardException(
+						"billAmount is less than 0 for Card " + vo.getCardNo());
+			}
+
+			if (dataFromFileIsOK) {
+				// vo.setCardNo(singleRowOfInput[0]);
+				vo.setDueDate(dueDate);
+				vo.setBillDate(billPaidDate);
+				vo.setBillAmount(billAmount);
+				voMap.put(vo.getCardNo(), vo);
+			}
+
+		}
+
+		return voMap;
+	}
+
+	private Date validateDate(final String input) throws CreditCardException {
+		Date formattedDate = null;
+		if (input != null && input.length() > 1) {
+			SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
+			try {
+				sdf.setLenient(false);
+				formattedDate = sdf.parse(input);
+			} catch (ParseException e) {
+				throw new CreditCardException("Parse Exception for Date "
+						+ input, e);
+			}
+		}
+		return formattedDate;
+	}
+
+	private List<String[]> readFromInputFile(final String filePath)
+			throws CreditCardException {
+		List<String[]> inputDataList = new ArrayList<String[]>();
+		try {
+			BufferedReader br = new BufferedReader(new FileReader(filePath));
+			String singleLineFromInput = null;
+			String[] wordsInSingleLine = new String[20];
+
+			while ((singleLineFromInput = br.readLine()) != null) {
+				if (singleLineFromInput != null
+						&& singleLineFromInput.length() > 0) {
+					wordsInSingleLine = singleLineFromInput.split("\\|"); // this
+																			// is
+																			// special
+					inputDataList.add(wordsInSingleLine);
+				}
+				// System.out.println("inputdataList::::::::::::"+inputDataList);
+			}
+
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+			throw new CreditCardException("Input File Not Found", e);
+		} catch (IOException e) {
+			throw new CreditCardException("Input Output Exception", e);
+		}
+		return inputDataList;
+	}
+
+}
+
+class CreditCardException extends Exception {
+
+	// Parameterless Constructor
+	public CreditCardException() {
+	}
+
+	// Constructor that accepts a message
+	public CreditCardException(String message) {
+		super(message);
+	}
+
+	// Constructor that accepts a message
+	public CreditCardException(String message, Exception e) {
+		super(message, e);
+	}
+
+}
+
+class ValueObjectForCards1 {
+	private String cardNo;
+	private Date dueDate;
+	private Date billDate;
+	private Double billAmount;
+	private Double interest;
+	private String cardType;
+	private String grade;
+	private Double fine;
+
+	public String getCardNo() {
+		return cardNo;
+	}
+
+	public void setCardNo(String cardNo) {
+		this.cardNo = cardNo;
+	}
+
+	public Date getDueDate() {
+		return dueDate;
+	}
+
+	public void setDueDate(Date dueDate) {
+		this.dueDate = dueDate;
+	}
+
+	public Date getBillDate() {
+		return billDate;
+	}
+
+	public void setBillDate(Date billDate) {
+		this.billDate = billDate;
+	}
+
+	public Double getBillAmount() {
+		return billAmount;
+	}
+
+	public void setBillAmount(Double billAmount) {
+		this.billAmount = billAmount;
+	}
+
+	public Double getInterest() {
+		return interest;
+	}
+
+	public void setInterest(Double interest) {
+		this.interest = interest;
+	}
+
+	public String getCardType() {
+		return cardType;
+	}
+
+	public void setCardType(String cardType) {
+		this.cardType = cardType;
+	}
+
+	public String getGrade() {
+		return grade;
+	}
+
+	public void setGrade(String grade) {
+		this.grade = grade;
+	}
+
+	public Double getFine() {
+		return fine;
+	}
+
+	public void setFine(Double fine) {
+		this.fine = fine;
+	}
+
+}
+
