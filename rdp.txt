@@ -1,3 +1,18 @@
+Dear Somnath/Sagar/Aninda,
+
+I am writing to announce my resignation from Cognizant, effective from today. I have already submitted my resignation in One Cognizant HCM portal. Mail has been triggered to Aninda. I have also attached the latest Cognizant Separation Policy effective from 1 July, 2018 onwards for your knowledge.
+
+Thank you so much for the work opportunities given during the amount of time you’ve been in the present role. I appreciate the opportunities for growth that you have provided me.
+The past months have been very rewarding. I’ve greatly enjoyed and appreciated the work opportunities all of which I will take with me throughout my career.
+
+Regarding Last Working Day : I have still 22 days of earned leaves(Sick and vacation) left. I don’t want to utilize those during my notice period because I have already taken so much leaves in the past and I don’t want to create trouble for you guys by consuming those leaves. So I am expecting my LWD to be 21 September, 2018 or earlier. 
+
+I’ll do everything possible to wrap up my duties and train other team members. Since I am not a critical resource and FSAMMID is a stable project with technically good and knowledgeable leadership. I expect my transition to be smooth. Please let me know if there’s anything else I can do to support during the transition.
+I wish the organization continued success, and I hope to stay in touch in the future. 
+
+Regards,
+Your Name and Designation
+
 
 public class BankDepositService {
 
